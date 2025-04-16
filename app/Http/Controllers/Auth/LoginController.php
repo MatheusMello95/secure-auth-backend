@@ -71,7 +71,15 @@ class LoginController extends Controller
         return response()->json([
             'success' => true,
             'token' => $token->plainTextToken,
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_admin' => (bool)$user->is_admin, // Include is_admin as boolean
+                'email_verified_at' => $user->email_verified_at,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ],
         ]);
     }
 
@@ -122,7 +130,15 @@ class LoginController extends Controller
         return response()->json([
             'success' => true,
             'token' => $token->plainTextToken,
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_admin' => (bool)$user->is_admin, // Include is_admin as boolean
+                'email_verified_at' => $user->email_verified_at,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ],
         ]);
     }
 
@@ -175,74 +191,27 @@ class LoginController extends Controller
         return response()->json([
             'success' => true,
             'token' => $token->plainTextToken,
-            'user' => $user,
-        ]);
-    }
-
-    public function logout(Request $request)
-    {
-        if ($request->user()) {
-            // Revoke the token that was used to authenticate the current request
-            $request->user()->currentAccessToken()->delete();
-
-            // Mark the current session as terminated
-            Session::where('user_id', $request->user()->id)
-                ->where('ip_address', $request->ip())
-                ->where('user_agent', $request->userAgent())
-                ->delete();
-        }
-
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Successfully logged out',
-        ]);
-    }
-
-    public function logoutOtherDevices(Request $request)
-    {
-        $request->validate([
-            'password' => 'required|string',
-        ]);
-
-        $user = $request->user();
-
-        if (!Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'password' => ['The provided password is incorrect.'],
-            ]);
-        }
-
-        // Delete all tokens except the current one
-        $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
-
-        // Delete all sessions except the current one
-        Session::where('user_id', $user->id)
-            ->where(function ($query) use ($request) {
-                $query->where('ip_address', '!=', $request->ip())
-                    ->orWhere('user_agent', '!=', $request->userAgent());
-            })
-            ->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'All other sessions have been terminated.',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_admin' => (bool)$user->is_admin, // Include is_admin as boolean
+                'email_verified_at' => $user->email_verified_at,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ],
         ]);
     }
 
     protected function hasTooManyLoginAttempts(Request $request)
     {
-        return FailedLoginAttempt::recentAttempts(
-            $request->email,
-            $request->ip(),
-            $this->decayMinutes
-        ) >= $this->maxAttempts;
+        return FailedLoginAttempt::where('email', $request->email)
+            ->where('ip_address', $request->ip())
+            ->where('attempted_at', '>=', Carbon::now()->subMinutes($this->decayMinutes))
+            ->count() >= $this->maxAttempts;
     }
 
+    // Also, make sure this method is defined:
     protected function sendLockoutResponse(Request $request)
     {
         $seconds = $this->decayMinutes * 60;
@@ -253,38 +222,37 @@ class LoginController extends Controller
             ],
         ])->status(429);
     }
-
     protected function createUserSession(Request $request, User $user)
-    {
-        // Identify device type
-        $agent = $request->userAgent();
-        $deviceName = 'Unknown Device';
+{
+    // Identify device type
+    $agent = $request->userAgent();
+    $deviceName = 'Unknown Device';
 
-        if (preg_match('/(chrome|safari|firefox|edge|opera)/i', $agent, $matches)) {
-            $browser = ucfirst($matches[1]);
+    if (preg_match('/(chrome|safari|firefox|edge|opera)/i', $agent, $matches)) {
+        $browser = ucfirst($matches[1]);
 
-            if (preg_match('/(windows|mac|linux|android|iphone|ipad)/i', $agent, $matches)) {
-                $os = ucfirst($matches[1]);
-                $deviceName = "{$browser} on {$os}";
-            } else {
-                $deviceName = "{$browser} Browser";
-            }
+        if (preg_match('/(windows|mac|linux|android|iphone|ipad)/i', $agent, $matches)) {
+            $os = ucfirst($matches[1]);
+            $deviceName = "{$browser} on {$os}";
+        } else {
+            $deviceName = "{$browser} Browser";
         }
-
-        // Mark all current sessions as not current
-        Session::where('user_id', $user->id)
-            ->where('is_current', true)
-            ->update(['is_current' => false]);
-
-        // Create a new session record
-        Session::create([
-            'user_id' => $user->id,
-            'ip_address' => $request->ip(),
-            'user_agent' => $agent,
-            'payload' => 'Session data',
-            'last_activity' => time(),
-            'device_name' => $deviceName,
-            'is_current' => true,
-        ]);
     }
+
+    // Mark all current sessions as not current
+    Session::where('user_id', $user->id)
+        ->where('is_current', true)
+        ->update(['is_current' => false]);
+
+    // Create a new session record
+    Session::create([
+        'user_id' => $user->id,
+        'ip_address' => $request->ip(),
+        'user_agent' => $agent,
+        'payload' => 'Session data',
+        'last_activity' => time(),
+        'device_name' => $deviceName,
+        'is_current' => true,
+    ]);
+}
 }
