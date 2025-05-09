@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
@@ -16,17 +17,29 @@ class PasswordResetController extends Controller
         $request->validate([
             'email' => 'required|email',
         ]);
+        Log::info('User email: ' . $request->email);
+        $user = \App\Models\User::where('email', $request->email)->first();
 
-        // Send reset link (this uses Laravel's built-in notification)
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        if($user) {
+            Log::info('Email: ' . $user->email);
+            // Send reset link (this uses Laravel's built-in notification)
+            $status = Password::sendResetLink(
+                $request->only('email')
+            );
 
-        // We don't want to reveal if the email exists in our system
-        return response()->json([
-            'success' => true,
-            'message' => 'If your email is in our system, you will receive a password reset link shortly.',
-        ]);
+            Log::info('Password reset status: ' . $status);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'You will receive a password reset link shortly on the email that you type.',
+            ]);
+        } else {
+            Log::info('User nor found');
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ]);
+        }
     }
 
     public function reset(Request $request)

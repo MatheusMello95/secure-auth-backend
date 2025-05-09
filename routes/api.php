@@ -7,9 +7,6 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\UserController;
 
-Route::get('/test', function () {
-    return response()->json(['message' => 'API is working!']);
-});
 // Public routes
 Route::post('/login', [LoginController::class, 'login']);
 Route::get('/csrf-token', [LoginController::class, 'csrf']);
@@ -26,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Two-factor authentication
     Route::get('/2fa/setup', [TwoFactorController::class, 'enable']);
     Route::post('/2fa/verify', [TwoFactorController::class, 'verify']);
+    Route::get('/2fa/status', [TwoFactorController::class, 'status']);
     Route::post('/2fa/disable', [TwoFactorController::class, 'disable']);
     Route::get('/2fa/recovery-codes', [TwoFactorController::class, 'recoveryCodes']);
     Route::post('/2fa/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes']);

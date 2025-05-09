@@ -92,8 +92,18 @@ class UserController extends Controller
             $validatedData = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
-                'password' => 'required|string|min:8',
+                'password' => [
+                    'required',
+                    'string',
+                    'min:8',                  // At least 8 characters
+                    'regex:/[A-Z]/',          // At least one uppercase letter
+                    'regex:/[a-z]/',          // At least one lowercase letter
+                    'regex:/[0-9]/',          // At least one number
+                    'regex:/[@$!%*#?&]/',     // At least one special character
+                ],
                 'is_admin' => 'nullable|boolean',
+            ], [
+                'password.regex' => 'The password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
             ]);
 
             $user = User::create([
@@ -132,13 +142,23 @@ class UserController extends Controller
             $validatedData = $request->validate([
                 'name' => 'sometimes|string|max:255',
                 'email' => 'sometimes|email|unique:users,email,' . $id,
-                'password' => 'sometimes|string|min:8',
+                'password' => [
+                    'sometimes',
+                    'string',
+                    'min:8',                  // At least 8 characters
+                    'regex:/[A-Z]/',          // At least one uppercase letter
+                    'regex:/[a-z]/',          // At least one lowercase letter
+                    'regex:/[0-9]/',          // At least one number
+                    'regex:/[@$!%*#?&]/',     // At least one special character
+                ],
                 'is_admin' => 'sometimes|boolean',
+            ], [
+                'password.regex' => 'The password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
             ]);
 
             // Only update password if it's provided
             if (isset($validatedData['password'])) {
-                $validatedData['password'] = bcrypt($validatedData['password']);
+                $validatedData['password'] = Hash::make($validatedData['password']);
             }
 
             $user->update($validatedData);

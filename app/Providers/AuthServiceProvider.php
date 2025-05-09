@@ -27,7 +27,7 @@ class AuthServiceProvider extends ServiceProvider
 
         // Set the URL in the password reset notification
         ResetPassword::createUrlUsing(function ($user, string $token) {
-            return env('FRONTEND_URL') . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
+            return env('FRONTEND_URL', 'http://localhost:3000') . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
         });
     }
 }
