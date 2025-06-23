@@ -80,7 +80,7 @@ class LoginController extends Controller
         // Get token for API authentication
         $token = $user->createToken('auth_token', ['*'], Carbon::now()->addHours(6));
 
-        return response()->json([
+        $response = response()->json([
             'success' => true,
             'token' => $token->plainTextToken,
             'user' => [
@@ -93,6 +93,7 @@ class LoginController extends Controller
                 'updated_at' => $user->updated_at,
             ],
         ]);
+        return $response;
     }
 
     public function verify2FA(Request $request)
@@ -183,19 +184,21 @@ class LoginController extends Controller
 
             \Log::info('2FA verification successful, returning token');
 
-            return response()->json([
+            // Prepare the response
+            $response = response()->json([
                 'success' => true,
                 'token' => $token->plainTextToken,
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'is_admin' => (bool)$user->is_admin, // Make sure this is explicitly cast to boolean
+                    'is_admin' => (bool)$user->is_admin,
                     'email_verified_at' => $user->email_verified_at,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,
                 ],
             ]);
+            return $response;
         } catch (\Exception $e) {
             \Log::error('Exception in verify2FA: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
@@ -208,6 +211,41 @@ class LoginController extends Controller
         }
     }
 
+    public function logout(Request $request)
+    {
+        // Revoke the token that was used to authenticate the current request
+        if ($user = $request->user()) {
+            // Revoke the current token
+            $user->currentAccessToken()->delete();
+        }
+
+        // Clear the auth_token cookie
+        $response = response()->json([
+            'success' => true,
+            'message' => 'Successfully logged out'
+        ]);
+        return $response;
+    }
+
+    public function logoutOtherDevices(Request $request)
+    {
+        $user = $request->user();
+
+        // Revoke all tokens except the current one
+        $user->tokens()
+            ->where('id', '!=', $user->currentAccessToken()->id)
+            ->delete();
+
+        // Mark other sessions as logged out
+        Session::where('user_id', $user->id)
+            ->where('is_current', false)
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Successfully logged out from all other devices'
+        ]);
+    }
     public function verifyBackupCode(Request $request)
     {
 
@@ -299,7 +337,6 @@ class LoginController extends Controller
             ->count() >= $this->maxAttempts;
     }
 
-    // Also, make sure this method is defined:
     protected function sendLockoutResponse(Request $request)
     {
         $seconds = $this->decayMinutes * 60;
@@ -311,36 +348,36 @@ class LoginController extends Controller
         ])->status(429);
     }
     protected function createUserSession(Request $request, User $user)
-{
-    // Identify device type
-    $agent = $request->userAgent();
-    $deviceName = 'Unknown Device';
+    {
+        // Identify device type
+        $agent = $request->userAgent();
+        $deviceName = 'Unknown Device';
 
-    if (preg_match('/(chrome|safari|firefox|edge|opera)/i', $agent, $matches)) {
-        $browser = ucfirst($matches[1]);
+        if (preg_match('/(chrome|safari|firefox|edge|opera)/i', $agent, $matches)) {
+            $browser = ucfirst($matches[1]);
 
-        if (preg_match('/(windows|mac|linux|android|iphone|ipad)/i', $agent, $matches)) {
-            $os = ucfirst($matches[1]);
-            $deviceName = "{$browser} on {$os}";
-        } else {
-            $deviceName = "{$browser} Browser";
+            if (preg_match('/(windows|mac|linux|android|iphone|ipad)/i', $agent, $matches)) {
+                $os = ucfirst($matches[1]);
+                $deviceName = "{$browser} on {$os}";
+            } else {
+                $deviceName = "{$browser} Browser";
+            }
         }
+
+        // Mark all current sessions as not current
+        Session::where('user_id', $user->id)
+            ->where('is_current', true)
+            ->update(['is_current' => false]);
+
+        // Create a new session record
+        Session::create([
+            'user_id' => $user->id,
+            'ip_address' => $request->ip(),
+            'user_agent' => $agent,
+            'payload' => 'Session data',
+            'last_activity' => time(),
+            'device_name' => $deviceName,
+            'is_current' => true,
+        ]);
     }
-
-    // Mark all current sessions as not current
-    Session::where('user_id', $user->id)
-        ->where('is_current', true)
-        ->update(['is_current' => false]);
-
-    // Create a new session record
-    Session::create([
-        'user_id' => $user->id,
-        'ip_address' => $request->ip(),
-        'user_agent' => $agent,
-        'payload' => 'Session data',
-        'last_activity' => time(),
-        'device_name' => $deviceName,
-        'is_current' => true,
-    ]);
-}
 }
