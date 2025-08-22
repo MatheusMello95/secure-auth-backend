@@ -1,66 +1,215 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🔐 Secure Auth Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A comprehensive authentication system built with Laravel that provides secure user authentication, two-factor authentication (2FA), session management, and admin functionality.
 
-## About Laravel
+## ✨ Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **🛡️ Secure Authentication** - User login/logout with Laravel Sanctum
+- **🔑 Two-Factor Authentication (2FA)** - TOTP-based 2FA with QR codes and backup codes
+- **📱 Session Management** - View and terminate active sessions across devices
+- **🔄 Password Reset** - Secure password reset functionality via email
+- **👨‍💼 Admin Panel** - User management for administrators
+- **🚀 API-First Design** - RESTful API endpoints for frontend integration
+- **🔒 Security Headers** - CSRF protection and secure session handling
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📋 Prerequisites
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Before setting up the project, ensure you have the following installed:
 
-## Learning Laravel
+- **PHP 8.2 or higher**
+- **Composer** (Dependency Manager for PHP)
+- **Node.js 18+** and npm (for the frontend)
+- **Database** (SQLite is used by default, but MySQL/PostgreSQL supported)
+- **Web Server** (Apache/Nginx or use `php artisan serve`)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Installation & Setup
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Step 1: Clone the Repository
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+git clone <your-repository-url>
+cd secure-auth-backend
+```
 
-## Laravel Sponsors
+### Step 2: Install PHP Dependencies
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+composer install
+```
 
-### Premium Partners
+This will install all Laravel dependencies including:
+- Laravel Framework 12.0
+- Laravel Sanctum (API authentication)
+- Google2FA (Two-factor authentication)
+- Bacon QR Code (QR code generation)
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### Step 3: Environment Configuration
 
-## Contributing
+1. Copy the environment file:
+```bash
+cp .env.example .env
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+2. Generate application key:
+```bash
+php artisan key:generate
+```
 
-## Code of Conduct
+3. Configure your `.env` file with the following important settings:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```env
+APP_NAME="Secure Auth Backend"
+APP_ENV=local
+APP_KEY=base64:your-generated-key
+APP_DEBUG=true
+APP_URL=http://localhost:8000
 
-## Security Vulnerabilities
+# Database Configuration (SQLite )
+# DB_CONNECTION=sqlite
+# DB_DATABASE=database/database.sqlite
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# For MySQL (optional)
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=secure_auth
+# DB_USERNAME=root
+# DB_PASSWORD=
 
-## License
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=secure_auth
+DB_USERNAME=root
+DB_PASSWORD=
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Frontend URL (for password reset emails)
+FRONTEND_URL=http://localhost:3000
+
+# Session Configuration
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=true
+
+# Mail Configuration (for password reset)
+MAIL_MAILER=smtp
+MAIL_HOST=your-smtp-host
+MAIL_PORT=587
+MAIL_USERNAME=your-email
+MAIL_PASSWORD=your-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@yourapp.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+### Step 4: Database Setup
+
+1. Run database migrations:
+```bash
+php artisan migrate
+```
+
+This will create the necessary tables:
+- `users` - User accounts
+- `sessions` - Session management
+- `password_reset_tokens` - Password reset functionality
+- `personal_access_tokens` - Sanctum API tokens
+
+### Step 5: Seed Database (Optional)
+
+Create a test admin user:
+```bash
+php artisan db:seed
+```
+
+### Step 6: Frontend Setup
+
+> **Important:** This backend requires the `secure-auth-frontend` repository to function properly.
+
+1. Clone and setup the frontend in a separate directory:
+```bash
+git clone https://github.com/MatheusMello95/secure-auth-fronten.git
+cd secure-auth-frontend
+npm install
+```
+
+2. Configure frontend environment variables:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
+
+### Step 7: Start the Development Servers
+
+1. Start the Laravel backend:
+```bash
+php artisan serve
+```
+The API will be available at `http://localhost:8000`
+
+2. In a separate terminal, start the Next.js frontend:
+```bash
+cd secure-auth-frontend
+npm run dev
+```
+The frontend will be available at `http://localhost:3000`
+
+## 📚 API Endpoints
+
+### Public Routes
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/login` | User authentication |
+| `GET` | `/api/csrf-token` | Get CSRF token |
+| `POST` | `/api/verify-2fa` | Verify 2FA code |
+| `POST` | `/api/verify-backup-code` | Verify 2FA backup code |
+| `POST` | `/api/password/reset-request` | Request password reset |
+| `POST` | `/api/password/reset` | Reset password |
+
+### Protected Routes (Require Authentication)
+
+#### Authentication & Session Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/logout` | Logout current session |
+| `POST` | `/api/logout-all` | Logout all sessions |
+| `GET` | `/api/sessions` | Get active sessions |
+| `DELETE` | `/api/sessions/{id}` | Terminate specific session |
+| `DELETE` | `/api/sessions` | Terminate all sessions |
+
+#### Two-Factor Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/2fa/setup` | Setup 2FA (get QR code) |
+| `POST` | `/api/2fa/verify` | Verify 2FA setup |
+| `GET` | `/api/2fa/status` | Check 2FA status |
+| `POST` | `/api/2fa/disable` | Disable 2FA |
+| `GET` | `/api/2fa/recovery-codes` | Get recovery codes |
+| `POST` | `/api/2fa/recovery-codes` | Regenerate recovery codes |
+
+#### User Management (Admin Only)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/users` | List users |
+| `POST` | `/api/users` | Create user |
+| `GET` | `/api/users/{id}` | Get user details |
+| `PUT` | `/api/users/{id}` | Update user |
+| `DELETE` | `/api/users/{id}` | Delete user |
+
+## 🔧 Configuration
+
+### Database Options
+
+The system supports multiple database configurations:
+
+- **SQLite** - Perfect for development and small deployments
+- **MySQL** - For production environments
+- **PostgreSQL** (Default) - For advanced features and scalability
+
+### Security Features
+
+- CSRF protection enabled by default
+- Encrypted session storage
+- Rate limiting on authentication endpoints
+- Secure password hashing with bcrypt
+- JWT tokens via Laravel Sanctum
